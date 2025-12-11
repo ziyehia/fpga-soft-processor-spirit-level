@@ -1,26 +1,26 @@
 # Nios V Soft-Processor & Accelerometer Integration
 
-[cite_start]**Author:**  Zeaiter Yehia [cite: 1]
+**Author:**  Zeaiter Yehia 
 
 ---
 
 ## Overview
 
-[cite_start]This project involves the design and implementation of a soft-core processor (Intel Nios V) on an FPGA[cite: 5]. [cite_start]The system is designed to control peripherals, establish communication protocols, and process sensor data to create interactive applications[cite: 8].
+This project involves the design and implementation of a soft-core processor (Intel Nios V) on an FPGA.The system is designed to control peripherals, establish communication protocols, and process sensor data to create interactive applications.
 
 The project milestones include:
-1.  [cite_start]**System Architecture:** Configuring a Nios V/m processor using Platform Designer[cite: 46, 71].
-2.  [cite_start]**LED Control:** Implementing a "Caterpillar" (Chaser) light pattern[cite: 91, 113].
-3.  [cite_start]**Sensor Integration:** Communicating with an ADXL345 Accelerometer via I2C[cite: 207, 212].
-4.  [cite_start]**Application:** Creating a digital "Spirit Level" based on the Y-axis tilt[cite: 328].
+1.  **System Architecture:** Configuring a Nios V/m processor using Platform Designer
+2.  **LED Control:** Implementing a "Caterpillar" (Chaser) light pattern
+3.  **Sensor Integration:** Communicating with an ADXL345 Accelerometer via I2C.
+4.  **Application:** Creating a digital "Spirit Level" based on the Y-axis tilt.
 
-[cite_start]The ultimate goal was to integrate this system into a "Magic Screen" (Telecran) project, allowing the screen to be erased by rotating or shaking the board[cite: 8, 209].
+The ultimate goal was to integrate this system into a "Magic Screen" (Telecran) project, allowing the screen to be erased by rotating or shaking the board.
 
 ---
 
 ## Project Structure
 
-[cite_start]The project directory requires a strict hierarchy to manage RTL, simulation, and software files [cite: 23-24].
+The project directory requires a strict hierarchy to manage RTL, simulation, and software files.
 
 ```text
 tp_nios_v/
@@ -39,7 +39,7 @@ tp_nios_v/
 
 ### Platform Designer Configuration
 
-[cite_start]The system is built around the **Intel Nios V/m** processor (RISC-V architecture)[cite: 46]. [cite_start]The following components are connected via the Avalon interconnect [cite: 54-67]:
+The system is built around the **Intel Nios V/m** processor (RISC-V architecture)[cite: 46]. [cite_start]The following components are connected via the Avalon interconnect:
 
   * **Processor:** Nios V/m Microcontroller.
   * **Memory:** On-Chip RAM.
@@ -49,7 +49,7 @@ tp_nios_v/
 
 ### VHDL Top-Level Integration
 
-[cite_start]The top-level entity, `tp_nios_v`, instantiates the Nios system and manages the tri-state buffers required for the I2C protocol (SDA and SCL lines) [cite: 213-216].
+The top-level entity, `tp_nios_v`, instantiates the Nios system and manages the tri-state buffers required for the I2C protocol (SDA and SCL lines).
 
 **VHDL Snippet (I2C Logic):**
 
@@ -66,11 +66,11 @@ io_i2c_sda <= '0' when s_i2c_sda_oe = '1' else 'Z';
 
 ## Software Environment
 
-[cite_start]The software is developed using the **Nios V Shell** and **RiscFree IDE**[cite: 95, 101].
+The software is developed using the **Nios V Shell** and **RiscFree IDE**.
 
 ### Initialization
 
-[cite_start]To prepare the development environment, the Board Support Package (BSP) and Application project are generated using the following commands[cite: 97]:
+To prepare the development environment, the Board Support Package (BSP) and Application project are generated using the following commands:
 
 ```bash
 # Generate BSP (HAL)
@@ -82,7 +82,7 @@ niosv-app -a=soft/app/ -b=soft/bsp/ -s=soft/app/main.c
 
 ### Debugging
 
-[cite_start]The application (`app.elf`) is downloaded to the board via JTAG, and output is monitored using the `juart-terminal` [cite: 104-106].
+The application (`app.elf`) is downloaded to the board via JTAG, and output is monitored using the `juart-terminal`.
 
 -----
 
@@ -90,24 +90,24 @@ niosv-app -a=soft/app/ -b=soft/bsp/ -s=soft/app/main.c
 
 ### 1\. LED Chaser (Chenillard)
 
-[cite_start]The LEDs are controlled via the PIO module to create an animation where the line of lights "extends" and "retracts"[cite: 114].
+The LEDs are controlled via the PIO module to create an animation where the line of lights "extends" and "retracts".
 
-  * [cite_start]**Mechanism:** Uses bitwise masks to manipulate the variable `i` written to `PIO_0_BASE`[cite: 133].
-  * [cite_start]**Extension:** Shifts the mask left (`<< 1`) and applies bitwise OR [cite: 134-135].
-  * [cite_start]**Retraction:** Shifts the mask right (`>> 1`) and applies bitwise AND [cite: 150-152].
+  * **Mechanism:** Uses bitwise masks to manipulate the variable `i` written to `PIO_0_BASE`.
+  * **Extension:** Shifts the mask left (`<< 1`) and applies bitwise OR.
+  * **Retraction:** Shifts the mask right (`>> 1`) and applies bitwise AND.
 
 ### 2\. Accelerometer (ADXL345)
 
-[cite_start]The system reads the X, Y, and Z axes from the ADXL345 sensor using the `altera_avalon_i2c` library[cite: 262].
+The system reads the X, Y, and Z axes from the ADXL345 sensor using the `altera_avalon_i2c` library.
 
 **Configuration Parameters:**
 
-  * [cite_start]**Slave Address:** `0x1D`[cite: 270].
-  * [cite_start]**Power Control Register:** `0x2D` (Value `0x08` to activate Measure Mode)[cite: 272, 279].
-  * [cite_start]**Data Register:** `0x32` (Start reading 6 bytes here)[cite: 277].
+  * **Slave Address:** `0x1D`.
+  * **Power Control Register:** `0x2D` (Value `0x08` to activate Measure Mode).
+  * **Data Register:** `0x32` (Start reading 6 bytes here).
 
 **Data Processing:**
-[cite_start]The 16-bit signed acceleration values are reconstructed from the 6-byte receive buffer [cite: 309-315]:
+The 16-bit signed acceleration values are reconstructed from the 6-byte receive buffer:
 
 ```c
 x = (rxbuffer[1] << 8) | rxbuffer[0];
@@ -115,11 +115,11 @@ y = (rxbuffer[3] << 8) | rxbuffer[2];
 z = (rxbuffer[5] << 8) | rxbuffer[4];
 ```
 
-### 3\. Spirit Level (Niveau à Bulles)
+### 3\. Spirit Level
 
-[cite_start]This feature maps the Y-axis inclination to the LED array[cite: 328].
+This feature maps the Y-axis inclination to the LED array.
 
-  * [cite_start]**Logic:** The code calculates which LED index (`0` to `9`) corresponds to the current tilt value[cite: 340].
+  * **Logic:** The code calculates which LED index (`0` to `9`) corresponds to the current tilt value.
   * **Visual:** A single LED lights up to represent the "bubble" position.
   * **Code Snippet:**
     ```c
@@ -127,7 +127,7 @@ z = (rxbuffer[5] << 8) | rxbuffer[4];
     uint16_t leds = (1 << led_to_light);
     IOWR_ALTERA_AVALON_PIO_DATA(PIO_0_BASE, leds);
     ```
-    [cite_start]*[cite: 340-342]*
+    
 
 -----
 
@@ -135,5 +135,4 @@ z = (rxbuffer[5] << 8) | rxbuffer[4];
 
 The original roadmap included integrating the accelerometer with a "Magic Screen" display project. [cite_start]The intended functionality was to trigger a screen clear/erase command when the accelerometer detected a "shake" event (crossing a specific acceleration threshold on multiple axes) [cite: 346-347].
 
-```
-```
+
