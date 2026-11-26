@@ -16,7 +16,10 @@ The spirit level restores the behavior shown on page 14. Nonnegative Y readings 
 
 The LED chaser shown on pages 9–10 is available as a separate build. It lights the LEDs one at a time up to all ten, then turns them off in reverse order until only the first LED remains lit.
 
-The report records the Télécran clear signal as unfinished (p. 15). The proposed integration would add a PIO to signal the display when acceleration crossed a threshold.
+## Unfinished work
+
+- **Télécran erase integration.** The lab report (p. 15) proposes adding a dedicated PIO output from the Nios V system to Télécran’s clear input. Implement gesture detection in the firmware, route the clear signal in VHDL, and test that the gesture clears the drawing once while ordinary tilting leaves it intact. The acceleration threshold and timing still need to be determined on hardware.
+- **Board validation.** Generate a programming file with a valid Nios V/m IP license and test both firmware builds on the DE10-Nano. Check that tilting moves the lit LED across the array, that the endpoint selects the last LED, and that the chaser lights and releases the LEDs in order.
 
 ## Build and run
 
