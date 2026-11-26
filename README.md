@@ -1,138 +1,54 @@
-# Nios V Soft-Processor & Accelerometer Integration
+# Nios V FPGA lab · ADXL345 accelerometer
 
-**Author:**  Zeaiter Yehia 
+This ENSEA FPGA lab integrates a **Nios V/m** soft processor and an **ADXL345** accelerometer on the **DE10-Nano** (Cyclone V, `5CSEBA6U23I7`). The firmware prints signed X, Y, and Z acceleration samples over JTAG UART and uses the Y-axis sample to drive a ten-LED spirit level.
 
----
+**Lab team** · Redwon Mohammad and Yehia Zeaiter
 
-## Overview
+## Hardware
 
-This project involves the design and implementation of a soft-core processor (Intel Nios V) on an FPGA.The system is designed to control peripherals, establish communication protocols, and process sensor data to create interactive applications.
+[The Platform Designer system](sopc/nios.qsys) connects the processor to on-chip RAM, JTAG UART, a 10-bit LED PIO, and an Avalon I²C master. [The VHDL top level](rtl/tp_nios_v.vhd) exposes the LED bus and drives SDA and SCL as open-drain signals. [The Quartus project](synt/tp_nios_v.qpf) uses the [board pin assignments](synt/tp_nios_v.qsf).
 
-The project milestones include:
-1.  **System Architecture:** Configuring a Nios V/m processor using Platform Designer
-2.  **LED Control:** Implementing a "Caterpillar" (Chaser) light pattern
-3.  **Sensor Integration:** Communicating with an ADXL345 Accelerometer via I2C.
-4.  **Application:** Creating a digital "Spirit Level" based on the Y-axis tilt.
+## Firmware and lab milestones
 
-The ultimate goal was to integrate this system into a "Magic Screen" (Telecran) project, allowing the screen to be erased by rotating or shaking the board.
+[The C firmware](soft/app/main.c) follows the acquisition code shown on page 13 of the lab report. It addresses the ADXL345 at `0x1D`, writes `0x08` to register `0x2D` to start measurement, and reads six bytes starting at `0x32`. It decodes three signed 16-bit little-endian samples, prints them, and waits 100 ms before the next read. Startup failures stop the application. A failed sample clears the LEDs before the next read attempt.
 
----
+The spirit level restores the behavior shown on page 14. Nonnegative Y readings turn the LEDs off. Negative readings select one LED, moving across the array as the magnitude increases. The original formula gives index 10 at −260. The firmware caps the index at 9, so −260 and more negative readings select the last LED.
 
-## Project Structure
+The LED chaser shown on pages 9–10 is available as a separate build. It lights the LEDs one at a time up to all ten, then turns them off in reverse order until only the first LED remains lit.
 
-The project directory requires a strict hierarchy to manage RTL, simulation, and software files.
+The report records the Télécran clear signal as unfinished (p. 15). The proposed integration would add a PIO to signal the display when acceleration crossed a threshold.
 
-```text
-tp_nios_v/
-[cite_start]├── rtl/        # VHDL source codes [cite: 27]
-[cite_start]├── sim/        # Simulation files [cite: 29]
-[cite_start]├── soft/       # Software development (C code & BSP) [cite: 31]
-│   ├── app/    # Application source code
-│   ├── bsp/    # Board Support Package
-[cite_start]│   └── sopc/   # Nios V configuration files [cite: 38]
-[cite_start]└── synt/       # Quartus synthesis project [cite: 28]
-````
+## Build and run
 
------
+Use Quartus Prime Lite 24.1 with Cyclone V device support, the Nios V command-line tools, and the RISC-V compiler. Quartus needs a valid Nios V/m IP license to generate a programming file. From the repository root, generate the Platform Designer outputs, HAL board support package, and firmware.
 
-## Hardware Architecture
-
-### Platform Designer Configuration
-
-The system is built around the **Intel Nios V/m** processor (RISC-V architecture)[cite: 46]. [cite_start]The following components are connected via the Avalon interconnect:
-
-  * **Processor:** Nios V/m Microcontroller.
-  * **Memory:** On-Chip RAM.
-  * **JTAG UART:** For terminal communication and debugging.
-  * **PIO (Parallel I/O):** For driving the 10 LEDs.
-  * **Avalon I2C (Master):** For communication with the ADXL345 accelerometer.
-
-### VHDL Top-Level Integration
-
-The top-level entity, `tp_nios_v`, instantiates the Nios system and manages the tri-state buffers required for the I2C protocol (SDA and SCL lines).
-
-**VHDL Snippet (I2C Logic):**
-
-```vhdl
-[cite_start]-- Connecting bidirectional buffers for I2C [cite: 249-252]
-s_i2c_scl_in <= io_i2c_scl;
-io_i2c_scl <= '0' when s_i2c_scl_oe = '1' else 'Z';
-
-s_i2c_sda_in <= io_i2c_sda;
-io_i2c_sda <= '0' when s_i2c_sda_oe = '1' else 'Z';
+```sh
+qsys-generate sopc/nios.qsys --synthesis=VHDL
+mkdir -p soft/bsp
+niosv-bsp -c -t=hal -s=sopc/nios.sopcinfo soft/bsp/settings.bsp
+niosv-app -a=soft/app -b=soft/bsp -s=soft/app/main.c
+cmake -S soft/app -B soft/app/build
+cmake --build soft/app/build
+quartus_sh --flow compile synt/tp_nios_v
 ```
 
------
+Once Quartus generates `synt/output_files/tp_nios_v.sof`, program it using Quartus Programmer. Download the firmware over JTAG and open the terminal.
 
-## Software Environment
-
-The software is developed using the **Nios V Shell** and **RiscFree IDE**.
-
-### Initialization
-
-To prepare the development environment, the Board Support Package (BSP) and Application project are generated using the following commands:
-
-```bash
-# Generate BSP (HAL)
-niosv-bsp -c -t=hal --sopc-info=sopc/nios.sopcinfo soft/bsp/settings.bsp
-
-# Generate Application
-niosv-app -a=soft/app/ -b=soft/bsp/ -s=soft/app/main.c
+```sh
+niosv-download -g -r soft/app/build/app.elf
+juart-terminal
 ```
 
-### Debugging
+To build the chaser after generating the BSP and application project, use a separate build directory and download its ELF over JTAG.
 
-The application (`app.elf`) is downloaded to the board via JTAG, and output is monitored using the `juart-terminal`.
-
------
-
-## Key Features & Implementation
-
-### 1\. LED Chaser (Chenillard)
-
-The LEDs are controlled via the PIO module to create an animation where the line of lights "extends" and "retracts".
-
-  * **Mechanism:** Uses bitwise masks to manipulate the variable `i` written to `PIO_0_BASE`.
-  * **Extension:** Shifts the mask left (`<< 1`) and applies bitwise OR.
-  * **Retraction:** Shifts the mask right (`>> 1`) and applies bitwise AND.
-
-### 2\. Accelerometer (ADXL345)
-
-The system reads the X, Y, and Z axes from the ADXL345 sensor using the `altera_avalon_i2c` library.
-
-**Configuration Parameters:**
-
-  * **Slave Address:** `0x1D`.
-  * **Power Control Register:** `0x2D` (Value `0x08` to activate Measure Mode).
-  * **Data Register:** `0x32` (Start reading 6 bytes here).
-
-**Data Processing:**
-The 16-bit signed acceleration values are reconstructed from the 6-byte receive buffer:
-
-```c
-x = (rxbuffer[1] << 8) | rxbuffer[0];
-y = (rxbuffer[3] << 8) | rxbuffer[2];
-z = (rxbuffer[5] << 8) | rxbuffer[4];
+```sh
+cmake -S soft/app -B soft/app/build/chaser -DCMAKE_C_FLAGS=-DLED_CHASER
+cmake --build soft/app/build/chaser
+niosv-download -g -r soft/app/build/chaser/app.elf
 ```
 
-### 3\. Spirit Level
+[Altera Nios V software build flow](https://docs.altera.com/r/docs/773196/current/an-978-nios-v-processor-migration-guidelines/software-component?contentId=Kep2FcErhF~Os7xLpMvD~w)
 
-This feature maps the Y-axis inclination to the LED array.
+## Verification
 
-  * **Logic:** The code calculates which LED index (`0` to `9`) corresponds to the current tilt value.
-  * **Visual:** A single LED lights up to represent the "bubble" position.
-  * **Code Snippet:**
-    ```c
-    int led_to_light = (y * LED_COUNT) / Y_MAX_ABS;
-    uint16_t leds = (1 << led_to_light);
-    IOWR_ALTERA_AVALON_PIO_DATA(PIO_0_BASE, leds);
-    ```
-    
-
------
-
-## Future Improvements
-
-The original roadmap included integrating the accelerometer with a "Magic Screen" display project. [cite_start]The intended functionality was to trigger a screen clear/erase command when the accelerometer detected a "shake" event (crossing a specific acceleration threshold on multiple axes) [cite: 346-347].
-
-
+A clean build regenerated the Platform Designer system and produced a RISC-V `app.elf` for each mode. Host checks covered signed decoding, the LED index bounds, the chaser sequence, and I²C error handling. The existing FPGA design passed Quartus synthesis and fitting in the earlier export check. Quartus reported that it could not generate a programming file with the available IP license, so board behavior remains unverified.

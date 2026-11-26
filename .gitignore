@@ -1,0 +1,11 @@
+/sopc/nios/
+/sopc/nios.sopcinfo
+/sopc/.qsys_edit/
+/soft/app/CMakeLists.txt
+/soft/app/build/
+/soft/bsp/
+/synt/db/
+/synt/incremental_db/
+/synt/output_files/
+/synt/.qsys_edit/
+/synt/*.qws
