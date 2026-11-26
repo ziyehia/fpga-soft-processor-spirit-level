@@ -50,9 +50,3 @@ niosv-download -g -r soft/app/build/chaser/app.elf
 ```
 
 [Altera Nios V software build flow](https://docs.altera.com/r/docs/773196/current/an-978-nios-v-processor-migration-guidelines/software-component?contentId=Kep2FcErhF~Os7xLpMvD~w)
-
-## Verification
-
-The project was tested on the DE10-Nano. The lab report documents the LED chaser running on the board and successful accelerometer readings.
-
-A later clean build regenerated the Platform Designer system and produced a RISC-V `app.elf` for each mode. Host checks covered signed decoding, the LED index bounds, the chaser sequence, and I²C error handling. Quartus passed synthesis and fitting. The available IP license prevented that build from generating a programming file.
