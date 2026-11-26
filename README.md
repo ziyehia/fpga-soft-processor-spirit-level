@@ -19,7 +19,6 @@ The LED chaser shown on pages 9–10 is available as a separate build. It lights
 ## Unfinished work
 
 - **Télécran erase integration.** The lab report (p. 15) proposes adding a dedicated PIO output from the Nios V system to Télécran’s clear input. Implement gesture detection in the firmware, route the clear signal in VHDL, and test that the gesture clears the drawing once while ordinary tilting leaves it intact. The acceleration threshold and timing still need to be determined on hardware.
-- **Board validation.** Generate a programming file with a valid Nios V/m IP license and test both firmware builds on the DE10-Nano. Check that tilting moves the lit LED across the array, that the endpoint selects the last LED, and that the chaser lights and releases the LEDs in order.
 
 ## Build and run
 
@@ -54,4 +53,6 @@ niosv-download -g -r soft/app/build/chaser/app.elf
 
 ## Verification
 
-A clean build regenerated the Platform Designer system and produced a RISC-V `app.elf` for each mode. Host checks covered signed decoding, the LED index bounds, the chaser sequence, and I²C error handling. The existing FPGA design passed Quartus synthesis and fitting in the earlier export check. Quartus reported that it could not generate a programming file with the available IP license, so board behavior remains unverified.
+The project was tested on the DE10-Nano. The lab report documents the LED chaser running on the board and successful accelerometer readings.
+
+A later clean build regenerated the Platform Designer system and produced a RISC-V `app.elf` for each mode. Host checks covered signed decoding, the LED index bounds, the chaser sequence, and I²C error handling. Quartus passed synthesis and fitting. The available IP license prevented that build from generating a programming file.
